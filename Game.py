@@ -6,7 +6,7 @@ class Deck:
     def __init__(self):
         self.cards = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11]*4
 
-    def draw_random_card(self):
+    def random_card(self):
         # pick out a random card from the deck
         card_position = r.randint(0, len(self.cards)-1)
         card = self.cards[card_position]
@@ -19,9 +19,6 @@ class Hand:
     def __init__(self, owner):
         self.cards = []
         self.owner = owner
-
-    def show_hand(self):
-        return "-> %s has : %s  Totals: %d" % (self.owner, self.cards, self.total())
 
     def add_card(self, card):
         self.cards.append(card)
@@ -38,68 +35,69 @@ class Hand:
                 aces -= 1
         return hand_val
 
-
-global dealer_hand, player_hand
-deck = Deck()
-player_name = input("Please enter your name: ")
-
-while True:
-    player_bust = False
-    dealer_bust = False
-    # draw initial hand
-    print("-------------------------\n... dealing new cards")
-    player_hand = Hand(player_name)
-    for i in range(2):
-        player_hand.add_card(deck.draw_random_card())
-    while True:
-        # loop for the player_hand's turn
-        player_total = player_hand.total()
-        print(player_hand.show_hand())
-        if player_total > 21:
-            print("--> %s is busted!" % player_name)
-            player_bust = True
-            break
-        elif player_total == 21:
-            print("--> Blackjack!")
-            break
+    def __str__(self):
+        if self.owner == "Dealer" and len(self.cards) == 2 and len(player_hand.cards) == 2:
+            return "The dealer drew: [%s] and a face-down card." % (self.cards[1])
         else:
-            hs = input("> Hit or Stand? (h or s): ").lower()
-            if 'h' in hs:
-                player_hand.add_card(deck.draw_random_card())
-            else:
-                break
-    while True:
-        # loop for the dealer's turn
-        # dealer draws their initial hand
-        dealer_hand = Hand("Dealer")
-        for i in range(2):
-            dealer_hand.add_card(deck.draw_random_card())
+            return "%s has : %s  Totals: %d" % (self.owner, self.cards, self.total())
+            # add code to change how aces are represented
 
-        while True:
-            dealer_total = dealer_hand.total()
-            # dealers typically stand at 18
-            if dealer_total < 18:
-                dealer_hand.add_card(deck.draw_random_card())
-            else:
-                break
-        print(dealer_hand.show_hand())
-        # results
-        if dealer_total > 21:
-            print("--> The dealer is busted!")
-            dealer_bust = True
-            if not player_bust:
-                print("--> %s wins!" % player_name)
-        elif dealer_total > player_total:
-            print("--> The dealer wins!")
-        elif dealer_total == player_total:
-            print("--> It's a draw!")
-        elif player_total > dealer_total:
-            if not player_bust:
-                print("--> %s wins!", player_name)
-            elif not dealer_bust:
-                print("--> The dealer wins!")
-        break
-    print("-------------------------")
-    exit_prompt = input("> Play again? (y or n): ").lower()
-    if 'n' in exit_prompt:
-        break
+
+def new_game():
+    print("-------------------------\n... Dealing new cards")
+    # give player and dealer 2 cards each
+    for i in range(2):
+        player_hand.add_card(deck.random_card())
+        dealer_hand.add_card(deck.random_card())
+
+    print(player_hand)
+    print(dealer_hand)
+
+    player_turn()
+    if player_hand.total() > 21:
+        return
+    dealer_turn()
+
+
+def player_turn():
+    # print(player_hand)
+    while player_hand.total() < 21:
+        if 'h' in input("-> Hit or Stand? (h or s): ").lower():
+            player_hand.add_card(deck.random_card())
+            print(player_hand)
+        else:
+            break
+
+
+def dealer_turn():
+    while dealer_hand.total() < 17:
+        dealer_hand.add_card(deck.random_card())
+
+
+def calc_results():
+    print("... Calculating results...")
+    # print(player_hand)
+    if player_hand.total() > 21:
+        print("%s has gone bust! The dealer wins!" % player_name)
+        return
+    print(dealer_hand)
+    if player_hand.total() < dealer_hand.total() <= 21:
+        print("The dealer wins!")
+    elif player_hand.total() > dealer_hand.total():
+        print("%s wins!" % player_name)
+    elif dealer_hand.total() > 21:
+        print("The dealer has gone bust!\n%s wins!" % player_name)
+    elif player_hand.total() == dealer_hand.total():
+        print("It's a draw!")
+
+
+if __name__ == "__main__":
+    deck = Deck()
+    player_name = input("-> Please enter your name: ")
+    while True:
+        player_hand = Hand(player_name)
+        dealer_hand = Hand("Dealer")
+        new_game()
+        calc_results()
+        if "n" in input("-------------------------\n-> Play again? (y or n): ").lower():
+            break
