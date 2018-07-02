@@ -4,6 +4,7 @@ import random as r
 class Deck:
 
     def __init__(self):
+        # currently set to just one 52 card deck
         self.cards = [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10, 11]*4
 
     def random_card(self):
@@ -26,6 +27,7 @@ class Hand:
     def total(self):
         # get hand's total value
         hand_val = sum(self.cards)
+
         aces = self.cards.count(11)
         # ace can equal 11 or 1, so...
         # if hand value is over 21, subtract 10 for each ace
@@ -36,11 +38,9 @@ class Hand:
         return hand_val
 
     def __str__(self):
-        if self.owner == "Dealer" and len(self.cards) == 2 and len(player_hand.cards) == 2:
-            return "The dealer drew: [%s] and a face-down card." % (self.cards[1])
-        else:
-            return "%s has : %s  Totals: %d" % (self.owner, self.cards, self.total())
-            # add code to change how aces are represented
+        # if there are any aces in the player's hand these will be presented as 'A'
+        real_hand = ['A' if x == 11 else x for x in self.cards]
+        return "%s has : %s  for a total of: %d" % (self.owner, real_hand, self.total())
 
 
 def new_game():
@@ -49,18 +49,19 @@ def new_game():
     for i in range(2):
         player_hand.add_card(deck.random_card())
         dealer_hand.add_card(deck.random_card())
-
+    # display hands
     print(player_hand)
-    print(dealer_hand)
+    show_dealer_hand()
 
     player_turn()
+    # if the player goes bust they will lose immediately
     if player_hand.total() > 21:
         return
     dealer_turn()
 
 
 def player_turn():
-    # print(player_hand)
+    # player has the choice to hit or stand so long as their score is less than 21
     while player_hand.total() < 21:
         if 'h' in input("-> Hit or Stand? (h or s): ").lower():
             player_hand.add_card(deck.random_card())
@@ -70,17 +71,24 @@ def player_turn():
 
 
 def dealer_turn():
+    # dealer must keep drawing cards if their score is 16 or lower
     while dealer_hand.total() < 17:
         dealer_hand.add_card(deck.random_card())
 
 
+def show_dealer_hand():
+    # initially the player only sees one of the dealer's cards
+    if len(dealer_hand.cards) == 2 and len(player_hand.cards) == 2:
+        print("The dealer drew: [%s] and a face-down card." % (dealer_hand.cards[1]))
+    else:
+        print(dealer_hand)
+
+
 def calc_results():
-    print("... Calculating results...")
-    # print(player_hand)
     if player_hand.total() > 21:
         print("%s has gone bust! The dealer wins!" % player_name)
         return
-    print(dealer_hand)
+    show_dealer_hand()
     if player_hand.total() < dealer_hand.total() <= 21:
         print("The dealer wins!")
     elif player_hand.total() > dealer_hand.total():
